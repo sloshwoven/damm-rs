@@ -1,0 +1,9 @@
+[package]
+name = "damm"
+version = "0.1.0"
+description = "calculates and validates Damm checksums"
+keywords = ["Damm", "checksum"]
+authors = ["sloshwoven <slosh.woven@gmail.com>"]
+license = "BSD3"
+
+[dependencies]
