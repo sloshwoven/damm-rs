@@ -1,5 +1,10 @@
+/// A Damm operation table. Must meet the requirements of the Damm algorithm
+/// (containing only the numbers 0-9, zero diagonal, etc).
 pub type OpTable = [[u8; 10]; 10];
 
+/// An operation table, taken from [Wikipedia].
+///
+/// [Wikipedia]: https://en.wikipedia.org/w/index.php?title=Damm_algorithm&oldid=740274149#Example
 pub const STANDARD_OP_TABLE: OpTable = [[0, 3, 1, 7, 5, 9, 8, 6, 4, 2],
                                         [7, 0, 9, 2, 1, 5, 4, 8, 6, 3],
                                         [4, 2, 0, 6, 8, 7, 1, 3, 5, 9],
