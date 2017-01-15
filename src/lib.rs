@@ -1,3 +1,7 @@
+//! Generates and validates check digits with the [Damm] algorithm.
+//!
+//! [Damm]: https://en.wikipedia.org/wiki/Damm_algorithm
+
 /// A Damm operation table. Must meet the requirements of the Damm algorithm
 /// (containing only the numbers 0-9, zero diagonal, etc).
 pub type OpTable = [[u8; 10]; 10];
