@@ -43,6 +43,19 @@ pub fn generate_with(op_table: &OpTable, nums: &[u8]) -> Option<u8> {
     })
 }
 
+/// # Examples
+///
+/// ```
+/// use damm::{STANDARD_OP_TABLE, validate_with};
+///
+/// assert_eq!(Some(true), validate_with(&STANDARD_OP_TABLE, &[5, 7, 2, 4]));
+/// assert_eq!(Some(false), validate_with(&STANDARD_OP_TABLE, &[5, 7, 2, 1]));
+/// assert_eq!(None, validate_with(&STANDARD_OP_TABLE, &[3, 10, 6, 2]));
+/// ```
+pub fn validate_with(op_table: &OpTable, nums: &[u8]) -> Option<bool> {
+    generate_with(op_table, nums).map(|d| d == 0)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
