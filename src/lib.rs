@@ -11,6 +11,16 @@ pub const STANDARD_OP_TABLE: OpTable = [[0, 3, 1, 7, 5, 9, 8, 6, 4, 2],
                                         [9, 4, 3, 8, 6, 1, 7, 2, 0, 5],
                                         [2, 5, 8, 1, 4, 3, 6, 7, 9, 0]];
 
+pub fn generate_with(op_table: &OpTable, nums: &[u8]) -> Option<u8> {
+    nums.iter().fold(Some(0), |res, n| {
+        res.and_then(|interim_digit| {
+            op_table.get(interim_digit as usize)
+                .and_then(|row| row.get(*n as usize))
+                .map(|x| *x)
+        })
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -33,5 +43,20 @@ mod tests {
         row_sorted.sort();
 
         assert_eq!(DIGITS, row_sorted, "invalid row {}", row_i);
+    }
+
+    #[test]
+    fn generate_with_simple_4() {
+        assert_eq!(Some(4), generate_with(&STANDARD_OP_TABLE, &[5, 7, 2]));
+    }
+
+    #[test]
+    fn generate_with_empty_zero() {
+        assert_eq!(Some(0), generate_with(&STANDARD_OP_TABLE, &[]));
+    }
+
+    #[test]
+    fn generate_with_bad_nums_none() {
+        assert_eq!(None, generate_with(&STANDARD_OP_TABLE, &[3, 10, 6]));
     }
 }
