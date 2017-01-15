@@ -16,6 +16,9 @@ pub const STANDARD_OP_TABLE: OpTable = [[0, 3, 1, 7, 5, 9, 8, 6, 4, 2],
                                         [9, 4, 3, 8, 6, 1, 7, 2, 0, 5],
                                         [2, 5, 8, 1, 4, 3, 6, 7, 9, 0]];
 
+/// Shortcut for calling [generate_with](fn.generate_with.html) using
+/// [STANDARD_OP_TABLE](constant.STANDARD_OP_TABLE.html).
+///
 /// # Examples
 ///
 /// ```
@@ -29,6 +32,10 @@ pub fn generate(nums: &[u8]) -> Option<u8> {
     generate_with(&STANDARD_OP_TABLE, nums)
 }
 
+/// Attempt to generate a check digit with a given [OpTable](type.OpTable.html).
+/// Returns `None` if the `OpTable` is invalid or the input contains numbers
+/// other than 0-9.
+///
 /// # Examples
 ///
 /// ```
@@ -48,6 +55,9 @@ pub fn generate_with(op_table: &OpTable, nums: &[u8]) -> Option<u8> {
     })
 }
 
+/// Shortcut for calling [validate_with](fn.validate_with.html) using
+/// [STANDARD_OP_TABLE](constant.STANDARD_OP_TABLE.html).
+///
 /// # Examples
 ///
 /// ```
@@ -61,6 +71,11 @@ pub fn validate(nums: &[u8]) -> Option<bool> {
     validate_with(&STANDARD_OP_TABLE, nums)
 }
 
+/// Attempt to validate that a sequence of digits ends with a valid check
+/// digit, using an arbitrary [OpTable](type.OpTable.html). Returns `None`
+/// if the `OpTable` is invalid or the digit sequence contains a number other
+/// than 0-9.
+///
 /// # Examples
 ///
 /// ```
