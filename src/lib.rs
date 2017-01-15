@@ -14,6 +14,19 @@ pub const STANDARD_OP_TABLE: OpTable = [[0, 3, 1, 7, 5, 9, 8, 6, 4, 2],
 /// # Examples
 ///
 /// ```
+/// use damm::{generate};
+///
+/// assert_eq!(Some(4), generate(&[5, 7, 2]));
+/// assert_eq!(Some(0), generate(&[]));
+/// assert_eq!(None, generate(&[3, 10, 6]));
+/// ```
+pub fn generate(nums: &[u8]) -> Option<u8> {
+    generate_with(&STANDARD_OP_TABLE, nums)
+}
+
+/// # Examples
+///
+/// ```
 /// use damm::{STANDARD_OP_TABLE, generate_with};
 ///
 /// assert_eq!(Some(4), generate_with(&STANDARD_OP_TABLE, &[5, 7, 2]));
