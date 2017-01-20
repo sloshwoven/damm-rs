@@ -28,16 +28,23 @@ pub const STANDARD_OP_TABLE: OpTable = [[0, 3, 1, 7, 5, 9, 8, 6, 4, 2],
 /// ```
 /// use damm::{generate};
 ///
-/// assert_eq!(Some(4), generate(&[5, 7, 2]));
-/// assert_eq!(Some(0), generate(&[]));
-/// assert_eq!(None, generate(&[3, 10, 6]));
+/// assert_eq!(Ok(4), generate(&[5, 7, 2]));
+/// assert_eq!(Ok(0), generate(&[]));
 /// ```
-pub fn generate(nums: &[u8]) -> Option<u8> {
+///
+/// # Errors
+///
+/// ```
+/// use damm::{generate};
+///
+/// assert_eq!(Err("non-digit 10 in nums".to_string()), generate(&[3, 10, 6]));
+/// ```
+pub fn generate(nums: &[u8]) -> Result<u8, String> {
     generate_with(&STANDARD_OP_TABLE, nums)
 }
 
 /// Attempt to generate a check digit with a given [OpTable](type.OpTable.html).
-/// Returns `None` if the `OpTable` is invalid or the input contains numbers
+/// Returns `Err` if the `OpTable` is invalid or the input contains numbers
 /// other than 0-9.
 ///
 /// # Examples
@@ -45,15 +52,38 @@ pub fn generate(nums: &[u8]) -> Option<u8> {
 /// ```
 /// use damm::{STANDARD_OP_TABLE, generate_with};
 ///
-/// assert_eq!(Some(4), generate_with(&STANDARD_OP_TABLE, &[5, 7, 2]));
-/// assert_eq!(Some(0), generate_with(&STANDARD_OP_TABLE, &[]));
-/// assert_eq!(None, generate_with(&STANDARD_OP_TABLE, &[3, 10, 6]));
+/// assert_eq!(Ok(4), generate_with(&STANDARD_OP_TABLE, &[5, 7, 2]));
+/// assert_eq!(Ok(0), generate_with(&STANDARD_OP_TABLE, &[]));
 /// ```
-pub fn generate_with(op_table: &OpTable, nums: &[u8]) -> Option<u8> {
-    nums.iter().fold(Some(0), |res, n| {
+///
+/// # Errors
+///
+/// ```
+/// use damm::{STANDARD_OP_TABLE, generate_with};
+///
+/// let bad_op_table = [[10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
+///                     [10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
+///                     [10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
+///                     [10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
+///                     [10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
+///                     [10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
+///                     [10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
+///                     [10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
+///                     [10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
+///                     [10, 10, 10, 10, 10, 10, 10, 10, 10, 10]];
+///
+/// assert_eq!(Err("non-digit 10 in nums".to_string()),
+///            generate_with(&STANDARD_OP_TABLE, &[3, 10, 6]));
+///
+/// assert_eq!(Err("non-digit 10 in op_table".to_string()),
+///            generate_with(&bad_op_table, &[3, 4, 6]));
+/// ```
+pub fn generate_with(op_table: &OpTable, nums: &[u8]) -> Result<u8, String> {
+    nums.iter().fold(Ok(0), |res, n| {
         res.and_then(|interim_digit| {
             op_table.get(interim_digit as usize)
-                .and_then(|row| row.get(*n as usize))
+                .ok_or(format!("non-digit {} in op_table", interim_digit))
+                .and_then(|row| row.get(*n as usize).ok_or(format!("non-digit {} in nums", n)))
                 .map(|x| *x)
         })
     })
@@ -67,16 +97,16 @@ pub fn generate_with(op_table: &OpTable, nums: &[u8]) -> Option<u8> {
 /// ```
 /// use damm::{validate};
 ///
-/// assert_eq!(Some(true), validate(&[5, 7, 2, 4]));
-/// assert_eq!(Some(false), validate(&[5, 7, 2, 1]));
-/// assert_eq!(None, validate(&[3, 10, 6, 2]));
+/// assert_eq!(Ok(true), validate(&[5, 7, 2, 4]));
+/// assert_eq!(Ok(false), validate(&[5, 7, 2, 1]));
+/// assert_eq!(Err("non-digit 10 in nums".to_string()), validate(&[3, 10, 6, 2]));
 /// ```
-pub fn validate(nums: &[u8]) -> Option<bool> {
+pub fn validate(nums: &[u8]) -> Result<bool, String> {
     validate_with(&STANDARD_OP_TABLE, nums)
 }
 
 /// Attempt to validate that a sequence of digits ends with a valid check
-/// digit, using an arbitrary [OpTable](type.OpTable.html). Returns `None`
+/// digit, using an arbitrary [OpTable](type.OpTable.html). Returns `Err`
 /// if the `OpTable` is invalid or the digit sequence contains a number other
 /// than 0-9.
 ///
@@ -85,11 +115,33 @@ pub fn validate(nums: &[u8]) -> Option<bool> {
 /// ```
 /// use damm::{STANDARD_OP_TABLE, validate_with};
 ///
-/// assert_eq!(Some(true), validate_with(&STANDARD_OP_TABLE, &[5, 7, 2, 4]));
-/// assert_eq!(Some(false), validate_with(&STANDARD_OP_TABLE, &[5, 7, 2, 1]));
-/// assert_eq!(None, validate_with(&STANDARD_OP_TABLE, &[3, 10, 6, 2]));
+/// assert_eq!(Ok(true), validate_with(&STANDARD_OP_TABLE, &[5, 7, 2, 4]));
+/// assert_eq!(Ok(false), validate_with(&STANDARD_OP_TABLE, &[5, 7, 2, 1]));
 /// ```
-pub fn validate_with(op_table: &OpTable, nums: &[u8]) -> Option<bool> {
+///
+/// # Errors
+///
+/// ```
+/// use damm::{STANDARD_OP_TABLE, validate_with};
+///
+/// let bad_op_table = [[10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
+///                     [10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
+///                     [10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
+///                     [10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
+///                     [10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
+///                     [10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
+///                     [10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
+///                     [10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
+///                     [10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
+///                     [10, 10, 10, 10, 10, 10, 10, 10, 10, 10]];
+///
+/// assert_eq!(Err("non-digit 10 in nums".to_string()),
+///            validate_with(&STANDARD_OP_TABLE, &[3, 10, 6, 2]));
+///
+/// assert_eq!(Err("non-digit 10 in op_table".to_string()),
+///            validate_with(&bad_op_table, &[3, 4, 6]));
+/// ```
+pub fn validate_with(op_table: &OpTable, nums: &[u8]) -> Result<bool, String> {
     generate_with(op_table, nums).map(|d| d == 0)
 }
 
