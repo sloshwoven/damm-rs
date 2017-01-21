@@ -39,7 +39,7 @@ pub const STANDARD_OP_TABLE: OpTable = [[0, 3, 1, 7, 5, 9, 8, 6, 4, 2],
 ///
 /// assert_eq!(Err("non-digit 10 in nums".to_string()), generate(&[3, 10, 6]));
 /// ```
-pub fn generate(nums: &[u8]) -> Result<u8, String> {
+pub fn generate<'a, T: IntoIterator<Item = &'a u8>>(nums: T) -> Result<u8, String> {
     generate_with(&STANDARD_OP_TABLE, nums)
 }
 
@@ -78,8 +78,10 @@ pub fn generate(nums: &[u8]) -> Result<u8, String> {
 /// assert_eq!(Err("non-digit 10 in op_table".to_string()),
 ///            generate_with(&bad_op_table, &[3, 4, 6]));
 /// ```
-pub fn generate_with(op_table: &OpTable, nums: &[u8]) -> Result<u8, String> {
-    nums.iter().fold(Ok(0), |res, n| {
+pub fn generate_with<'a, T: IntoIterator<Item = &'a u8>>(op_table: &OpTable,
+                                                         nums: T)
+                                                         -> Result<u8, String> {
+    nums.into_iter().fold(Ok(0), |res, n| {
         res.and_then(|interim_digit| {
             op_table.get(interim_digit as usize)
                 .ok_or(format!("non-digit {} in op_table", interim_digit))
@@ -101,7 +103,7 @@ pub fn generate_with(op_table: &OpTable, nums: &[u8]) -> Result<u8, String> {
 /// assert_eq!(Ok(false), validate(&[5, 7, 2, 1]));
 /// assert_eq!(Err("non-digit 10 in nums".to_string()), validate(&[3, 10, 6, 2]));
 /// ```
-pub fn validate(nums: &[u8]) -> Result<bool, String> {
+pub fn validate<'a, T: IntoIterator<Item = &'a u8>>(nums: T) -> Result<bool, String> {
     validate_with(&STANDARD_OP_TABLE, nums)
 }
 
@@ -141,7 +143,9 @@ pub fn validate(nums: &[u8]) -> Result<bool, String> {
 /// assert_eq!(Err("non-digit 10 in op_table".to_string()),
 ///            validate_with(&bad_op_table, &[3, 4, 6]));
 /// ```
-pub fn validate_with(op_table: &OpTable, nums: &[u8]) -> Result<bool, String> {
+pub fn validate_with<'a, T: IntoIterator<Item = &'a u8>>(op_table: &OpTable,
+                                                         nums: T)
+                                                         -> Result<bool, String> {
     generate_with(op_table, nums).map(|d| d == 0)
 }
 
