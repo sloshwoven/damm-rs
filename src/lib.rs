@@ -2,9 +2,42 @@
 //!
 //! [Damm]: https://en.wikipedia.org/wiki/Damm_algorithm
 
+use std::error;
+use std::fmt;
+
 /// A Damm operation table. Must meet the requirements of the Damm algorithm
 /// (containing only the numbers 0-9, zero diagonal, etc).
 pub type OpTable = [[u8; 10]; 10];
+
+/// An error related to a Damm operation.
+#[derive(Debug, Eq, PartialEq)]
+pub enum DammError {
+    /// A bad operation table; contains the bad entry.
+    BadOpTable(u8),
+
+    /// A bad input number; contains the bad entry.
+    BadInputNum(u8),
+}
+
+impl fmt::Display for DammError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let msg = match *self {
+            DammError::BadOpTable(n) => format!("non-digit {} in operation table", n),
+            DammError::BadInputNum(n) => format!("non-digit {} in input number sequence", n),
+        };
+
+        write!(f, "{}", msg)
+    }
+}
+
+impl error::Error for DammError {
+    fn description(&self) -> &str {
+        match *self {
+            DammError::BadOpTable(_) => "bad operation table",
+            DammError::BadInputNum(_) => "bad input number",
+        }
+    }
+}
 
 /// An operation table, taken from [Wikipedia].
 ///
@@ -26,7 +59,7 @@ pub const STANDARD_OP_TABLE: OpTable = [[0, 3, 1, 7, 5, 9, 8, 6, 4, 2],
 /// # Examples
 ///
 /// ```
-/// use damm::{generate};
+/// use damm::*;
 ///
 /// assert_eq!(Ok(4), generate(&[5, 7, 2]));
 /// assert_eq!(Ok(0), generate(&[]));
@@ -35,11 +68,11 @@ pub const STANDARD_OP_TABLE: OpTable = [[0, 3, 1, 7, 5, 9, 8, 6, 4, 2],
 /// # Errors
 ///
 /// ```
-/// use damm::{generate};
+/// use damm::*;
 ///
-/// assert_eq!(Err("non-digit 10 in nums".to_string()), generate(&[3, 10, 6]));
+/// assert_eq!(Err(DammError::BadInputNum(10)), generate(&[3, 10, 6]));
 /// ```
-pub fn generate<'a, T: IntoIterator<Item = &'a u8>>(nums: T) -> Result<u8, String> {
+pub fn generate<'a, T: IntoIterator<Item = &'a u8>>(nums: T) -> Result<u8, DammError> {
     generate_with(&STANDARD_OP_TABLE, nums)
 }
 
@@ -50,7 +83,7 @@ pub fn generate<'a, T: IntoIterator<Item = &'a u8>>(nums: T) -> Result<u8, Strin
 /// # Examples
 ///
 /// ```
-/// use damm::{STANDARD_OP_TABLE, generate_with};
+/// use damm::*;
 ///
 /// assert_eq!(Ok(4), generate_with(&STANDARD_OP_TABLE, &[5, 7, 2]));
 /// assert_eq!(Ok(0), generate_with(&STANDARD_OP_TABLE, &[]));
@@ -59,7 +92,7 @@ pub fn generate<'a, T: IntoIterator<Item = &'a u8>>(nums: T) -> Result<u8, Strin
 /// # Errors
 ///
 /// ```
-/// use damm::{STANDARD_OP_TABLE, generate_with};
+/// use damm::*;
 ///
 /// let bad_op_table = [[10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
 ///                     [10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
@@ -72,20 +105,17 @@ pub fn generate<'a, T: IntoIterator<Item = &'a u8>>(nums: T) -> Result<u8, Strin
 ///                     [10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
 ///                     [10, 10, 10, 10, 10, 10, 10, 10, 10, 10]];
 ///
-/// assert_eq!(Err("non-digit 10 in nums".to_string()),
-///            generate_with(&STANDARD_OP_TABLE, &[3, 10, 6]));
-///
-/// assert_eq!(Err("non-digit 10 in op_table".to_string()),
-///            generate_with(&bad_op_table, &[3, 4, 6]));
+/// assert_eq!(Err(DammError::BadInputNum(10)), generate_with(&STANDARD_OP_TABLE, &[3, 10, 6]));
+/// assert_eq!(Err(DammError::BadOpTable(10)), generate_with(&bad_op_table, &[3, 4, 6]));
 /// ```
 pub fn generate_with<'a, T: IntoIterator<Item = &'a u8>>(op_table: &OpTable,
                                                          nums: T)
-                                                         -> Result<u8, String> {
+                                                         -> Result<u8, DammError> {
     nums.into_iter().fold(Ok(0), |res, n| {
         res.and_then(|interim_digit| {
             op_table.get(interim_digit as usize)
-                .ok_or(format!("non-digit {} in op_table", interim_digit))
-                .and_then(|row| row.get(*n as usize).ok_or(format!("non-digit {} in nums", n)))
+                .ok_or(DammError::BadOpTable(interim_digit))
+                .and_then(|row| row.get(*n as usize).ok_or(DammError::BadInputNum(*n)))
                 .map(|x| *x)
         })
     })
@@ -97,13 +127,13 @@ pub fn generate_with<'a, T: IntoIterator<Item = &'a u8>>(op_table: &OpTable,
 /// # Examples
 ///
 /// ```
-/// use damm::{validate};
+/// use damm::*;
 ///
 /// assert_eq!(Ok(true), validate(&[5, 7, 2, 4]));
 /// assert_eq!(Ok(false), validate(&[5, 7, 2, 1]));
-/// assert_eq!(Err("non-digit 10 in nums".to_string()), validate(&[3, 10, 6, 2]));
+/// assert_eq!(Err(DammError::BadInputNum(10)), validate(&[3, 10, 6, 2]));
 /// ```
-pub fn validate<'a, T: IntoIterator<Item = &'a u8>>(nums: T) -> Result<bool, String> {
+pub fn validate<'a, T: IntoIterator<Item = &'a u8>>(nums: T) -> Result<bool, DammError> {
     validate_with(&STANDARD_OP_TABLE, nums)
 }
 
@@ -115,7 +145,7 @@ pub fn validate<'a, T: IntoIterator<Item = &'a u8>>(nums: T) -> Result<bool, Str
 /// # Examples
 ///
 /// ```
-/// use damm::{STANDARD_OP_TABLE, validate_with};
+/// use damm::*;
 ///
 /// assert_eq!(Ok(true), validate_with(&STANDARD_OP_TABLE, &[5, 7, 2, 4]));
 /// assert_eq!(Ok(false), validate_with(&STANDARD_OP_TABLE, &[5, 7, 2, 1]));
@@ -124,7 +154,7 @@ pub fn validate<'a, T: IntoIterator<Item = &'a u8>>(nums: T) -> Result<bool, Str
 /// # Errors
 ///
 /// ```
-/// use damm::{STANDARD_OP_TABLE, validate_with};
+/// use damm::*;
 ///
 /// let bad_op_table = [[10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
 ///                     [10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
@@ -137,23 +167,42 @@ pub fn validate<'a, T: IntoIterator<Item = &'a u8>>(nums: T) -> Result<bool, Str
 ///                     [10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
 ///                     [10, 10, 10, 10, 10, 10, 10, 10, 10, 10]];
 ///
-/// assert_eq!(Err("non-digit 10 in nums".to_string()),
-///            validate_with(&STANDARD_OP_TABLE, &[3, 10, 6, 2]));
-///
-/// assert_eq!(Err("non-digit 10 in op_table".to_string()),
-///            validate_with(&bad_op_table, &[3, 4, 6]));
+/// assert_eq!(Err(DammError::BadInputNum(10)), validate_with(&STANDARD_OP_TABLE, &[3, 10, 6, 2]));
+/// assert_eq!(Err(DammError::BadOpTable(10)), validate_with(&bad_op_table, &[3, 4, 6]));
 /// ```
 pub fn validate_with<'a, T: IntoIterator<Item = &'a u8>>(op_table: &OpTable,
                                                          nums: T)
-                                                         -> Result<bool, String> {
+                                                         -> Result<bool, DammError> {
     generate_with(op_table, nums).map(|d| d == 0)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::error::Error;
 
     const DIGITS: [u8; 10] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+    // originally I had the error_fmt and error_description tests as doctests,
+    // but I moved them here because I don't want to suppress the default
+    // documentation
+
+    #[test]
+    fn error_fmt() {
+        assert_eq!("non-digit 10 in operation table",
+                   format!("{}", DammError::BadOpTable(10)));
+
+        assert_eq!("non-digit 10 in input number sequence",
+                   format!("{}", DammError::BadInputNum(10)));
+    }
+
+    #[test]
+    fn error_description() {
+        assert_eq!("bad operation table",
+                   DammError::BadOpTable(10).description());
+
+        assert_eq!("bad input number", DammError::BadInputNum(10).description());
+    }
 
     #[test]
     fn sot_properties() {
