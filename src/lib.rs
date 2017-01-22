@@ -111,12 +111,12 @@ pub fn generate<'a, T: IntoIterator<Item = &'a u8>>(nums: T) -> Result<u8, DammE
 pub fn generate_with<'a, T: IntoIterator<Item = &'a u8>>(op_table: &OpTable,
                                                          nums: T)
                                                          -> Result<u8, DammError> {
-    nums.into_iter().fold(Ok(0), |res, n| {
+    nums.into_iter().fold(Ok(0), |res, &n| {
         res.and_then(|interim_digit| {
             op_table.get(interim_digit as usize)
                 .ok_or(DammError::BadOpTable(interim_digit))
-                .and_then(|row| row.get(*n as usize).ok_or(DammError::BadInputNum(*n)))
-                .map(|x| *x)
+                .and_then(|row| row.get(n as usize).ok_or(DammError::BadInputNum(n)))
+                .map(|&x| x)
         })
     })
 }
