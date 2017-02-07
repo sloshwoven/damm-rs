@@ -9,14 +9,17 @@ use std::fmt;
 
 use try_from::TryFrom;
 
-/// A Damm operation table. Must meet the requirements of the Damm algorithm
-/// (containing only the numbers 0-9, zero diagonal, etc).
+/// A Damm operation table.
 #[derive(Debug, Eq, PartialEq)]
 pub struct OpTable([[u8; 10]; 10]);
 
 impl TryFrom<[[u8; 10]; 10]> for OpTable {
     type Err = InvalidOpTable;
 
+    /// Try to create an `OpTable` from a `[[u8; 10]; 10]` operation table. The table must meet the
+    /// requirements of the Damm algorithm (it must only contain the digits 0-9 and have a zero
+    /// diagonal).
+    ///
     /// # Examples
     ///
     /// ```
@@ -105,7 +108,10 @@ fn is_digit_permutation(mut row: [u8; 10]) -> bool {
 /// Error for an invalid operation table.
 #[derive(Debug, Eq, PartialEq)]
 pub enum InvalidOpTable {
+    /// Contains the invalid row, and the index of the row within the table.
     IncompleteRow([u8; 10], usize),
+
+    /// Contains the invalid diagonal value, and the index of the row within the table.
     NonZeroDiagonal(u8, usize),
 }
 
@@ -133,10 +139,10 @@ impl error::Error for InvalidOpTable {
     }
 }
 
-/// An error related to a Damm operation.
+/// An error related to Damm generation or validation.
 #[derive(Debug, Eq, PartialEq)]
 pub enum DammError {
-    /// A bad input number; contains the bad entry.
+    /// A bad (non-digit) input number; contains the bad entry.
     BadInputNum(u8),
 }
 
@@ -239,6 +245,13 @@ pub fn generate_with<'a, T: IntoIterator<Item = &'a u8>>(op_table: &OpTable,
 ///
 /// assert_eq!(Ok(true), validate(&[5, 7, 2, 4]));
 /// assert_eq!(Ok(false), validate(&[5, 7, 2, 1]));
+/// ```
+///
+/// # Errors
+///
+/// ```
+/// use damm::*;
+///
 /// assert_eq!(Err(DammError::BadInputNum(10)), validate(&[3, 10, 6, 2]));
 /// ```
 pub fn validate<'a, T: IntoIterator<Item = &'a u8>>(nums: T) -> Result<bool, DammError> {
