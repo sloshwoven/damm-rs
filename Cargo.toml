@@ -3,6 +3,7 @@ name = "damm"
 version = "0.1.0"
 description = "calculates and validates Damm checksums"
 repository = "https://github.com/sloshwoven/damm-rs"
+readme = "README.md"
 keywords = ["Damm", "checksum"]
 categories = ["algorithms"]
 authors = ["sloshwoven <slosh.woven@gmail.com>"]
