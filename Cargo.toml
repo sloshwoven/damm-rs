@@ -1,10 +1,10 @@
 [package]
 name = "damm"
 version = "0.1.0"
-description = "calculates and validates Damm checksums"
+description = "Damm check digit generation and validation"
 repository = "https://github.com/sloshwoven/damm-rs"
 readme = "README.md"
-keywords = ["Damm", "checksum"]
+keywords = ["Damm", "checkdigit"]
 categories = ["algorithms"]
 authors = ["sloshwoven <slosh.woven@gmail.com>"]
 license = "BSD3"
