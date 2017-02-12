@@ -11,27 +11,25 @@ pub mod optable;
 
 use optable::{OpTable, STANDARD_OP_TABLE};
 
-/// An error related to Damm generation or validation.
+/// Error returned when a non-digit is provided to a generation or validation function.
+/// Contains the non-digit number.
 #[derive(Debug, Eq, PartialEq)]
-pub enum DammError {
-    /// A bad (non-digit) input number; contains the bad entry.
-    BadInputNum(u8),
-}
+pub struct NonDigitError(pub u8);
 
-impl fmt::Display for DammError {
+impl fmt::Display for NonDigitError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let msg = match *self {
-            DammError::BadInputNum(n) => format!("non-digit {} in input number sequence", n),
+            NonDigitError(n) => format!("non-digit {} in input number sequence", n),
         };
 
         write!(f, "{}", msg)
     }
 }
 
-impl error::Error for DammError {
+impl error::Error for NonDigitError {
     fn description(&self) -> &str {
         match *self {
-            DammError::BadInputNum(_) => "bad input number",
+            NonDigitError(_) => "non-digit",
         }
     }
 }
@@ -53,9 +51,9 @@ impl error::Error for DammError {
 /// ```
 /// use damm::*;
 ///
-/// assert_eq!(Err(DammError::BadInputNum(10)), generate(&[3, 10, 6]));
+/// assert_eq!(Err(NonDigitError(10)), generate(&[3, 10, 6]));
 /// ```
-pub fn generate<'a, T: IntoIterator<Item = &'a u8>>(nums: T) -> Result<u8, DammError> {
+pub fn generate<'a, T: IntoIterator<Item = &'a u8>>(nums: T) -> Result<u8, NonDigitError> {
     generate_with(&STANDARD_OP_TABLE, nums)
 }
 
@@ -79,18 +77,18 @@ pub fn generate<'a, T: IntoIterator<Item = &'a u8>>(nums: T) -> Result<u8, DammE
 /// use damm::*;
 /// use damm::optable::*;
 ///
-/// assert_eq!(Err(DammError::BadInputNum(10)), generate_with(&STANDARD_OP_TABLE, &[3, 10, 6]));
+/// assert_eq!(Err(NonDigitError(10)), generate_with(&STANDARD_OP_TABLE, &[3, 10, 6]));
 /// ```
 pub fn generate_with<'a, T: IntoIterator<Item = &'a u8>>(op_table: &OpTable,
                                                          nums: T)
-                                                         -> Result<u8, DammError> {
+                                                         -> Result<u8, NonDigitError> {
     nums.into_iter().fold(Ok(0), |res, &n| {
         res.and_then(|interim_digit| {
             op_table
                 .rows()
                 .get(interim_digit as usize)
                 .unwrap() // OpTables are guaranteed to only contain digits, so this is safe
-                .get(n as usize).ok_or(DammError::BadInputNum(n))
+                .get(n as usize).ok_or(NonDigitError(n))
                 .map(|&x| x)
         })
     })
@@ -113,9 +111,9 @@ pub fn generate_with<'a, T: IntoIterator<Item = &'a u8>>(op_table: &OpTable,
 /// ```
 /// use damm::*;
 ///
-/// assert_eq!(Err(DammError::BadInputNum(10)), validate(&[3, 10, 6, 2]));
+/// assert_eq!(Err(NonDigitError(10)), validate(&[3, 10, 6, 2]));
 /// ```
-pub fn validate<'a, T: IntoIterator<Item = &'a u8>>(nums: T) -> Result<bool, DammError> {
+pub fn validate<'a, T: IntoIterator<Item = &'a u8>>(nums: T) -> Result<bool, NonDigitError> {
     validate_with(&STANDARD_OP_TABLE, nums)
 }
 
@@ -140,11 +138,11 @@ pub fn validate<'a, T: IntoIterator<Item = &'a u8>>(nums: T) -> Result<bool, Dam
 /// use damm::*;
 /// use damm::optable::*;
 ///
-/// assert_eq!(Err(DammError::BadInputNum(10)), validate_with(&STANDARD_OP_TABLE, &[3, 10, 6, 2]));
+/// assert_eq!(Err(NonDigitError(10)), validate_with(&STANDARD_OP_TABLE, &[3, 10, 6, 2]));
 /// ```
 pub fn validate_with<'a, T: IntoIterator<Item = &'a u8>>(op_table: &OpTable,
                                                          nums: T)
-                                                         -> Result<bool, DammError> {
+                                                         -> Result<bool, NonDigitError> {
     generate_with(op_table, nums).map(|d| d == 0)
 }
 
@@ -160,11 +158,11 @@ mod tests {
     #[test]
     fn error_fmt() {
         assert_eq!("non-digit 10 in input number sequence",
-                   format!("{}", DammError::BadInputNum(10)));
+                   format!("{}", NonDigitError(10)));
     }
 
     #[test]
     fn error_description() {
-        assert_eq!("bad input number", DammError::BadInputNum(10).description());
+        assert_eq!("non-digit", NonDigitError(10).description());
     }
 }
