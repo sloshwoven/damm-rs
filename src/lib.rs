@@ -4,6 +4,7 @@
 
 extern crate try_from;
 
+use std::borrow::Borrow;
 use std::error;
 use std::fmt;
 
@@ -53,7 +54,10 @@ impl error::Error for NonDigitError {
 ///
 /// assert_eq!(Err(NonDigitError(10)), generate(&[3, 10, 6]));
 /// ```
-pub fn generate<'a, T: IntoIterator<Item = &'a u8>>(nums: T) -> Result<u8, NonDigitError> {
+pub fn generate<I, B>(nums: I) -> Result<u8, NonDigitError>
+    where I: IntoIterator<Item = B>,
+          B: Borrow<u8>
+{
     generate_with(&STANDARD_OP_TABLE, nums)
 }
 
@@ -79,10 +83,13 @@ pub fn generate<'a, T: IntoIterator<Item = &'a u8>>(nums: T) -> Result<u8, NonDi
 ///
 /// assert_eq!(Err(NonDigitError(10)), generate_with(&STANDARD_OP_TABLE, &[3, 10, 6]));
 /// ```
-pub fn generate_with<'a, T: IntoIterator<Item = &'a u8>>(op_table: &OpTable,
-                                                         nums: T)
-                                                         -> Result<u8, NonDigitError> {
-    nums.into_iter().fold(Ok(0), |res, &n| {
+pub fn generate_with<I, B>(op_table: &OpTable, nums: I) -> Result<u8, NonDigitError>
+    where I: IntoIterator<Item = B>,
+          B: Borrow<u8>
+{
+    nums.into_iter().fold(Ok(0), |res, n| {
+        let n = *n.borrow();
+
         res.and_then(|interim_digit| {
             op_table
                 .rows()
@@ -113,7 +120,10 @@ pub fn generate_with<'a, T: IntoIterator<Item = &'a u8>>(op_table: &OpTable,
 ///
 /// assert_eq!(Err(NonDigitError(10)), validate(&[3, 10, 6, 2]));
 /// ```
-pub fn validate<'a, T: IntoIterator<Item = &'a u8>>(nums: T) -> Result<bool, NonDigitError> {
+pub fn validate<I, B>(nums: I) -> Result<bool, NonDigitError>
+    where I: IntoIterator<Item = B>,
+          B: Borrow<u8>
+{
     validate_with(&STANDARD_OP_TABLE, nums)
 }
 
@@ -140,9 +150,10 @@ pub fn validate<'a, T: IntoIterator<Item = &'a u8>>(nums: T) -> Result<bool, Non
 ///
 /// assert_eq!(Err(NonDigitError(10)), validate_with(&STANDARD_OP_TABLE, &[3, 10, 6, 2]));
 /// ```
-pub fn validate_with<'a, T: IntoIterator<Item = &'a u8>>(op_table: &OpTable,
-                                                         nums: T)
-                                                         -> Result<bool, NonDigitError> {
+pub fn validate_with<I, B>(op_table: &OpTable, nums: I) -> Result<bool, NonDigitError>
+    where I: IntoIterator<Item = B>,
+          B: Borrow<u8>
+{
     generate_with(op_table, nums).map(|d| d == 0)
 }
 
@@ -164,5 +175,11 @@ mod tests {
     #[test]
     fn error_description() {
         assert_eq!("non-digit", NonDigitError(10).description());
+    }
+
+    #[test]
+    fn generate_from_string() {
+        assert_eq!(Ok(4),
+                   generate("572".chars().map(|c| c.to_digit(10).unwrap() as u8)));
     }
 }
